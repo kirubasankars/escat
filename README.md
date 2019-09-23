@@ -71,4 +71,4 @@ To Print Index Mappings, add "_" in the end.
 ./escat i a* _
 ```
 
-Note: "_" only works indices,templates and snapshots.
+Note: "_" is the special command. only works indices,templates and snapshots.
