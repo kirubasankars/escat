@@ -34,11 +34,11 @@ var (
 func main() {
 
 	var host string
-	flag.StringVar(&host, "host", "", "set the elasticsearch host url")
+	flag.StringVar(&host, "host", "", "set the elasticsearch host url or use environment variable ES_HOST")
 	var user string
-	flag.StringVar(&user, "user", "elastic", "set the elasticsearch user")
+	flag.StringVar(&user, "user", "elastic", "set the elasticsearch user or use environment variable ES_USER")
 	var password string
-	flag.StringVar(&password, "password", "", "set the elasticsearch password")
+	flag.StringVar(&password, "password", "", "set the elasticsearch password or or use environment variable ES_PASS")
 
 	var formatJSON bool
 	flag.BoolVar(&formatJSON, "json", false, "set the output format to json")
@@ -71,6 +71,16 @@ func main() {
 		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+ALLOCATION, "Print Allocation")
 		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+NODES, "Print Nodes")
 		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+INDICES, "Print Indices")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+SEGMENTS, "Print Segments")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+MASTER, "Print Master")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+ALIAIS, "Print Alias")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+REPOSITORIES, "Print Repositories")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+COUNT, "Print Count")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+PLUGINS, "Print Plugins")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+TEMPLATES, "Print Templates")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+INFO, "Print Info")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+USER, "Print User")
+		fmt.Fprintf(os.Stdout, "%-20s %-20s\n", "   "+ROLE, "Print Role")
 		fmt.Fprintf(os.Stdout, "\n")
 	}
 
