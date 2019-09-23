@@ -55,7 +55,7 @@ Setup Environment Variables
   export ES_PASS=changeme
 ```
 
-To Print Indices, You can just type copule of letters in the begining of the command
+To List Indices, You can just type couple of letters in the begining of the command
 
 ```
 ./escat indices 
@@ -64,7 +64,7 @@ or
 ./escat i a*
 ```
 
-To Print Index Mapping, add "_" in the end.
+To Print Index Mappings, add "_" in the end.
 
 ```
 ./escat i _
