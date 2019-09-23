@@ -17,8 +17,10 @@ Setup Environment Variables
 
 To Print Indices
 
-./escat i 
+./escat indices or ./escat i 
 ./escat i a*
+
+You can just type copule of letters in the begining of the command
 
 To Print Index Mapping, add "_" in the end.
 
