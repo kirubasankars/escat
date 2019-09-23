@@ -21,3 +21,5 @@ To Print Index Mapping, add "_" in the end.
 
 ./escat i _
 ./eacat i a* _
+
+Note: "_" only works indices,templates and snapshots.
