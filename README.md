@@ -7,7 +7,7 @@ Usage :
   escat -help
   
   ```
-  
+
 Usage : escat [OPTIONS] COMMAND:
 
 Options:
@@ -15,17 +15,17 @@ Options:
   -f string
     	set the fields
   -host string
-    	set the elasticsearch host url
+    	set the elasticsearch host url or use environment variable ES_HOST
   -json
     	set the output format to json
   -password string
-    	set the elasticsearch password
+    	set the elasticsearch password or or use environment variable ES_PASS
   -pretty
     	pretty print (true|false) (default true)
   -s string
     	set the fields to sort
   -user string
-    	set the elasticsearch user (default "elastic")
+    	set the elasticsearch user or use environment variable ES_USER (default "elastic")
   -v	set header (true|false)
 
 Commands:
@@ -43,7 +43,7 @@ Commands:
    templates         Print Templates     
    info              Print Info          
    user              Print User          
-   role              Print Role          
+   role              Print Role        
 
 ```
 
