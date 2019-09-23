@@ -5,6 +5,47 @@ command line tool for managing elasticsearch
 Usage :
 
   escat -help
+  
+  ```
+  
+Usage : escat [OPTIONS] COMMAND:
+
+Options:
+  -d	set to debug (true|false)
+  -f string
+    	set the fields
+  -host string
+    	set the elasticsearch host url
+  -json
+    	set the output format to json
+  -password string
+    	set the elasticsearch password
+  -pretty
+    	pretty print (true|false) (default true)
+  -s string
+    	set the fields to sort
+  -user string
+    	set the elasticsearch user (default "elastic")
+  -v	set header (true|false)
+
+Commands:
+   health            Print Cluster health
+   snapshots         Print Snapshots     
+   allocation        Print Allocation    
+   nodes             Print Nodes         
+   indices           Print Indices       
+   segments          Print Segments      
+   master            Print Master        
+   aliases           Print Alias         
+   repositories      Print Repositories  
+   count             Print Count         
+   plugins           Print Plugins       
+   templates         Print Templates     
+   info              Print Info          
+   user              Print User          
+   role              Print Role          
+
+```
 
 
 Setup Environment Variables
