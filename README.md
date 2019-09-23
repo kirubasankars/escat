@@ -18,6 +18,7 @@ Setup Environment Variables
 To Print Indices
 
 ./escat indices or ./escat i 
+
 ./escat i a*
 
 You can just type copule of letters in the begining of the command
@@ -25,6 +26,7 @@ You can just type copule of letters in the begining of the command
 To Print Index Mapping, add "_" in the end.
 
 ./escat i _
-./eacat i a* _
+
+./escat i a* _
 
 Note: "_" only works indices,templates and snapshots.
