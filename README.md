@@ -10,7 +10,9 @@ Usage :
 Setup Environment Variables
 
   export ES_HOST=http://locahost:9200
+  
   export ES_USER=elastic
+  
   export ES_PASS=changeme
 
 To Print Indices
