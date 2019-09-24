@@ -46,9 +46,9 @@ func main() {
 	flag.BoolVar(&pretty, "pretty", true, "pretty print (true|false)")
 
 	var verbose bool
-	flag.BoolVar(&verbose, "v", false, "set header (true|false)")
+	flag.BoolVar(&verbose, "v", false, "show header (true|false)")
 	var fields string
-	flag.StringVar(&fields, "f", "", "set the fields")
+	flag.StringVar(&fields, "h", "", "set the fields")
 	var sortFields string
 	flag.StringVar(&sortFields, "s", "", "set the fields to sort")
 
@@ -110,10 +110,6 @@ func main() {
 
 	command := strings.Trim(strings.ToLower(args[0]), "")
 
-	if !esClient.IsValidate(args) {
-		return
-	}
-
 	format := "text"
 	if formatJSON {
 		format = "json"
@@ -128,6 +124,14 @@ func main() {
 			pickedCommand = x
 			break
 		}
+	}
+
+	if pickedCommand == "" {
+		pickedCommand = command
+	}
+
+	if esClient.isCommandHelp(pickedCommand, args) {
+		return
 	}
 
 	catr := catRequest{}
@@ -236,6 +240,7 @@ func main() {
 	}
 }
 
+//ElasticSearchClient is client object
 type ElasticSearchClient struct {
 	Host     string
 	User     string
@@ -243,9 +248,15 @@ type ElasticSearchClient struct {
 	http     *http.Client
 }
 
+//NewElasticSearchClient to build the new elasticsearch client
 func NewElasticSearchClient(host, user, password string) *ElasticSearchClient {
+	if !strings.HasPrefix(host, "http") {
+		host = "http://" + host
+	}
 	client := &ElasticSearchClient{
-		Host: host,
+		Host:     host,
+		User:     user,
+		Password: password,
 		http: &http.Client{
 			Timeout: time.Duration(5 * time.Second),
 		},
@@ -254,6 +265,7 @@ func NewElasticSearchClient(host, user, password string) *ElasticSearchClient {
 	return client
 }
 
+//CatHealth do /_cluster/health or /_cat/health depends upo then r.format parameter
 func (client *ElasticSearchClient) CatHealth(r catRequest) ([]byte, bool) {
 	url := "/_cluster/health"
 	var query []string
@@ -263,9 +275,10 @@ func (client *ElasticSearchClient) CatHealth(r catRequest) ([]byte, bool) {
 			query = append(query, "v")
 		}
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatSnapshot do _cat/snapshots/{r.arg1}
 func (client *ElasticSearchClient) CatSnapshot(r catRequest) ([]byte, bool) {
 	url := "/_cat/snapshots/" + r.arg1
 	var query []string
@@ -278,14 +291,14 @@ func (client *ElasticSearchClient) CatSnapshot(r catRequest) ([]byte, bool) {
 		}
 	}
 
-	output, jsonOUTPUT := client.Do(url, query, r)
+	output, jsonOUTPUT := client.do(url, query, r)
 
 	if r.def {
 		snaps := []snapshots{}
 		json.Unmarshal(output, &snaps)
 		output = []byte("[")
 		for _, i := range snaps {
-			snapDef, _ := client.Do("/_snapshot/"+r.arg1+"/"+i.ID, nil, r)
+			snapDef, _ := client.do("/_snapshot/"+r.arg1+"/"+i.ID, nil, r)
 			output = append(output, snapDef...)
 			output = append(output, ',')
 		}
@@ -295,6 +308,7 @@ func (client *ElasticSearchClient) CatSnapshot(r catRequest) ([]byte, bool) {
 	return output, jsonOUTPUT
 }
 
+//CatAllocation do _cat/allocation
 func (client *ElasticSearchClient) CatAllocation(r catRequest) ([]byte, bool) {
 	url := "/_cat/allocation"
 	var query []string
@@ -306,9 +320,10 @@ func (client *ElasticSearchClient) CatAllocation(r catRequest) ([]byte, bool) {
 			query = append(query, "v")
 		}
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatNodes do _cat/nodes
 func (client *ElasticSearchClient) CatNodes(r catRequest) ([]byte, bool) {
 	url := "/_cat/nodes"
 	var query []string
@@ -320,9 +335,10 @@ func (client *ElasticSearchClient) CatNodes(r catRequest) ([]byte, bool) {
 			query = append(query, "v")
 		}
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatPlugins do _cat/plugins
 func (client *ElasticSearchClient) CatPlugins(r catRequest) ([]byte, bool) {
 	url := "/_cat/plugins"
 	var query []string
@@ -334,9 +350,10 @@ func (client *ElasticSearchClient) CatPlugins(r catRequest) ([]byte, bool) {
 			query = append(query, "v")
 		}
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatTemplates do _cat/templates, with "_" do _template/{templateName}
 func (client *ElasticSearchClient) CatTemplates(r catRequest) ([]byte, bool) {
 	url := "/_cat/templates"
 
@@ -362,14 +379,14 @@ func (client *ElasticSearchClient) CatTemplates(r catRequest) ([]byte, bool) {
 		query = append(query, "s=n")
 	}
 
-	output, jsonOUTPUT := client.Do(url, query, r)
+	output, jsonOUTPUT := client.do(url, query, r)
 
 	if r.def {
 		templates := []templates{}
 		json.Unmarshal(output, &templates)
 		output = []byte("[")
 		for _, i := range templates {
-			templateDef, _ := client.Do("/_template/"+i.Name, nil, r)
+			templateDef, _ := client.do("/_template/"+i.Name, nil, r)
 			output = append(output, templateDef...)
 			output = append(output, ',')
 		}
@@ -379,6 +396,7 @@ func (client *ElasticSearchClient) CatTemplates(r catRequest) ([]byte, bool) {
 	return output, jsonOUTPUT
 }
 
+//CatMaster do _cat/master
 func (client *ElasticSearchClient) CatMaster(r catRequest) ([]byte, bool) {
 	url := "/_cat/master"
 	var query []string
@@ -393,9 +411,10 @@ func (client *ElasticSearchClient) CatMaster(r catRequest) ([]byte, bool) {
 	if r.fields != "" {
 		query = append(query, "h="+r.fields)
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatIndices do _cat/indices, with "_" do _template/{indexName}
 func (client *ElasticSearchClient) CatIndices(r catRequest) ([]byte, bool) {
 	url := "/_cat/indices"
 	if r.arg1 != "" {
@@ -419,14 +438,14 @@ func (client *ElasticSearchClient) CatIndices(r catRequest) ([]byte, bool) {
 		query = append(query, "s=i")
 	}
 
-	output, jsonOUTPUT := client.Do(url, query, r)
+	output, jsonOUTPUT := client.do(url, query, r)
 
 	if r.def {
 		indices := []indices{}
 		json.Unmarshal(output, &indices)
 		output = []byte("[")
 		for _, i := range indices {
-			indexDef, _ := client.Do("/"+i.Index, nil, r)
+			indexDef, _ := client.do("/"+i.Index, nil, r)
 			output = append(output, indexDef...)
 			output = append(output, ',')
 		}
@@ -436,6 +455,7 @@ func (client *ElasticSearchClient) CatIndices(r catRequest) ([]byte, bool) {
 	return output, jsonOUTPUT
 }
 
+//CatSegments do _cat/segments
 func (client *ElasticSearchClient) CatSegments(r catRequest) ([]byte, bool) {
 	url := "/_cat/segments"
 	if r.arg1 != "" {
@@ -458,9 +478,10 @@ func (client *ElasticSearchClient) CatSegments(r catRequest) ([]byte, bool) {
 	} else {
 		query = append(query, "s=i")
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatAliases do _cat/aliases
 func (client *ElasticSearchClient) CatAliases(r catRequest) ([]byte, bool) {
 	url := "/_cat/aliases"
 	if r.arg1 != "" {
@@ -483,9 +504,10 @@ func (client *ElasticSearchClient) CatAliases(r catRequest) ([]byte, bool) {
 	} else {
 		query = append(query, "s=a")
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatRepositories do _cat/repositories, with "_" do _snapshot/{repoName}
 func (client *ElasticSearchClient) CatRepositories(r catRequest) ([]byte, bool) {
 	url := "/_cat/repositories"
 	if r.arg1 != "" {
@@ -504,14 +526,14 @@ func (client *ElasticSearchClient) CatRepositories(r catRequest) ([]byte, bool) 
 		query = append(query, "h="+r.fields)
 	}
 
-	output, jsonOUTPUT := client.Do(url, query, r)
+	output, jsonOUTPUT := client.do(url, query, r)
 
 	if r.def {
 		snaps := []snapshots{}
 		json.Unmarshal(output, &snaps)
 		output = []byte("[")
 		for _, i := range snaps {
-			snapDef, _ := client.Do("/_snapshot/"+i.ID, nil, r)
+			snapDef, _ := client.do("/_snapshot/"+i.ID, nil, r)
 			output = append(output, snapDef...)
 			output = append(output, ',')
 		}
@@ -521,6 +543,7 @@ func (client *ElasticSearchClient) CatRepositories(r catRequest) ([]byte, bool) 
 	return output, jsonOUTPUT
 }
 
+//CatCount do _cat/count
 func (client *ElasticSearchClient) CatCount(r catRequest) ([]byte, bool) {
 	url := "/_cat/count"
 	if r.arg1 != "" {
@@ -538,15 +561,17 @@ func (client *ElasticSearchClient) CatCount(r catRequest) ([]byte, bool) {
 	if r.fields != "" {
 		query = append(query, "h="+r.fields)
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatInfo do /
 func (client *ElasticSearchClient) CatInfo(r catRequest) ([]byte, bool) {
 	url := "/"
 	var query []string
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatRoles do _xpack/security/role
 func (client *ElasticSearchClient) CatRoles(r catRequest) ([]byte, bool) {
 	url := "/_xpack/security/role"
 	if r.arg1 != "" {
@@ -564,9 +589,10 @@ func (client *ElasticSearchClient) CatRoles(r catRequest) ([]byte, bool) {
 	if r.fields != "" {
 		query = append(query, "h="+r.fields)
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
+//CatUsers do _xpack/security/user
 func (client *ElasticSearchClient) CatUsers(r catRequest) ([]byte, bool) {
 	url := "/_xpack/security/user"
 	if r.arg1 != "" {
@@ -584,11 +610,10 @@ func (client *ElasticSearchClient) CatUsers(r catRequest) ([]byte, bool) {
 	if r.fields != "" {
 		query = append(query, "h="+r.fields)
 	}
-	return client.Do(url, query, r)
+	return client.do(url, query, r)
 }
 
-func (client *ElasticSearchClient) IsValidate(args []string) bool {
-	command := args[0]
+func (client *ElasticSearchClient) isCommandHelp(command string, args []string) bool {
 
 	firstArg := ""
 	if len(args) >= 2 {
@@ -613,8 +638,20 @@ func (client *ElasticSearchClient) IsValidate(args []string) bool {
 			text = "escat [OPTIONS] nodes"
 		}
 
+		if command == PLUGINS {
+			text = "escat [OPTIONS] plugins"
+		}
+
+		if command == MASTER {
+			text = "escat [OPTIONS] master"
+		}
+
 		if command == INDICES {
 			text = "escat [OPTIONS] indices [PREFIX] [_]"
+		}
+
+		if command == SEGMENTS {
+			text = "escat [OPTIONS] segments [PREFIX]"
 		}
 
 		if command == ALIAIS {
@@ -625,8 +662,20 @@ func (client *ElasticSearchClient) IsValidate(args []string) bool {
 			text = "escat [OPTIONS] repositories [PREFIX] [_]"
 		}
 
+		if command == INFO {
+			text = "escat [OPTIONS] info"
+		}
+
 		if command == COUNT {
 			text = "escat [OPTIONS] count [PREFIX]"
+		}
+
+		if command == USER {
+			text = "escat [OPTIONS] user [PREFIX]"
+		}
+
+		if command == ROLE {
+			text = "escat [OPTIONS] role [PREFIX]"
 		}
 
 		if text != "" {
@@ -636,32 +685,58 @@ func (client *ElasticSearchClient) IsValidate(args []string) bool {
 			fmt.Fprintf(os.Stdout, "Options:\n")
 			flag.PrintDefaults()
 			fmt.Fprintf(os.Stdout, "\n")
+
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
-func (client *ElasticSearchClient) Do(url string, query []string, r catRequest) ([]byte, bool) {
+func (client *ElasticSearchClient) do(url string, query []string, r catRequest) ([]byte, bool) {
 	if query != nil && len(query) > 0 {
 		url += "?" + strings.Join(query, "&")
 	}
 	req, _ := http.NewRequest("GET", client.Host+url, nil)
+	req.SetBasicAuth(client.User, client.Password)
 	res, err := client.http.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
 	responseJSON := false
 	if res.Header.Get("Content-Type") == "application/json; charset=UTF-8" {
 		responseJSON = true
 	}
-	if err != nil {
-		panic(err)
-	}
 	body, err := ioutil.ReadAll(res.Body)
-	req.SetBasicAuth(client.User, client.Password)
 	if err != nil {
 		panic(err)
 	}
 	if body[len(body)-1] != '\n' {
 		body = append(body, '\n')
 	}
+
 	return body, responseJSON
+}
+
+type indices struct {
+	Index string `json:"index"`
+}
+
+type templates struct {
+	Name string `json:"name"`
+}
+
+type snapshots struct {
+	ID string `json:"id"`
+}
+
+type catRequest struct {
+	format     string
+	verbose    bool
+	arg1       string
+	fields     string
+	sortFields string
+	def        bool
+	debug      bool
 }
